@@ -501,6 +501,44 @@ pub struct AppSettings {
     /// Only meaningful when post-processing is active; no-op on other platforms.
     #[serde(default = "default_speak_answers_enabled")]
     pub speak_answers_enabled: bool,
+    /// Which text-to-speech engine speaks the answers (Windows built-in,
+    /// OpenAI TTS, or ElevenLabs).
+    #[serde(default = "default_tts_engine")]
+    pub tts_engine: TtsEngine,
+    /// Windows SAPI: the selected voice token id (None = system default).
+    #[serde(default)]
+    pub tts_sapi_voice_id: Option<String>,
+    /// Windows SAPI speaking rate (-10..10).
+    #[serde(default = "default_tts_sapi_rate")]
+    pub tts_sapi_rate: i32,
+    /// Windows SAPI pitch delta (-10..10); set by "Match my voice".
+    #[serde(default)]
+    pub tts_sapi_pitch: i32,
+    /// Windows SAPI volume (0..100).
+    #[serde(default = "default_tts_sapi_volume")]
+    pub tts_sapi_volume: u32,
+    /// OpenAI TTS API key (stored under the "openai" entry).
+    #[serde(default = "default_tts_openai_api_key")]
+    pub tts_openai_api_key: SecretMap,
+    /// OpenAI TTS voice (alloy, echo, fable, onyx, nova, shimmer).
+    #[serde(default = "default_tts_openai_voice")]
+    pub tts_openai_voice: String,
+    /// OpenAI TTS model.
+    #[serde(default = "default_tts_openai_model")]
+    pub tts_openai_model: String,
+    /// OpenAI TTS speed (0.25..4.0).
+    #[serde(default = "default_tts_openai_speed")]
+    pub tts_openai_speed: f64,
+    /// ElevenLabs API key (stored under the "elevenlabs" entry).
+    #[serde(default = "default_tts_elevenlabs_api_key")]
+    pub tts_elevenlabs_api_key: SecretMap,
+    /// ElevenLabs voice id (a stock voice or a cloned one from the user's
+    /// own recordings).
+    #[serde(default)]
+    pub tts_elevenlabs_voice_id: String,
+    /// ElevenLabs model.
+    #[serde(default = "default_tts_elevenlabs_model")]
+    pub tts_elevenlabs_model: String,
     #[serde(default)]
     pub mute_while_recording: bool,
     #[serde(default)]
@@ -720,6 +758,52 @@ fn default_post_process_enabled() -> bool {
 
 fn default_speak_answers_enabled() -> bool {
     false
+}
+
+/// The engine that speaks the voice answers.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Default, PartialEq, Eq, Type)]
+#[serde(rename_all = "snake_case")]
+pub enum TtsEngine {
+    #[default]
+    Windows,
+    OpenAi,
+    ElevenLabs,
+}
+
+fn default_tts_engine() -> TtsEngine {
+    TtsEngine::Windows
+}
+
+fn default_tts_openai_api_key() -> SecretMap {
+    SecretMap(HashMap::new())
+}
+
+fn default_tts_elevenlabs_api_key() -> SecretMap {
+    SecretMap(HashMap::new())
+}
+
+fn default_tts_sapi_rate() -> i32 {
+    0
+}
+
+fn default_tts_sapi_volume() -> u32 {
+    100
+}
+
+fn default_tts_openai_voice() -> String {
+    "alloy".to_string()
+}
+
+fn default_tts_openai_model() -> String {
+    "gpt-4o-mini-tts".to_string()
+}
+
+fn default_tts_openai_speed() -> f64 {
+    1.0
+}
+
+fn default_tts_elevenlabs_model() -> String {
+    "eleven_multilingual_v2".to_string()
 }
 
 fn default_app_language() -> String {
@@ -1059,6 +1143,18 @@ pub fn get_default_settings() -> AppSettings {
         post_process_prompts: default_post_process_prompts(),
         post_process_selected_prompt_id: None,
         speak_answers_enabled: default_speak_answers_enabled(),
+        tts_engine: default_tts_engine(),
+        tts_sapi_voice_id: None,
+        tts_sapi_rate: default_tts_sapi_rate(),
+        tts_sapi_pitch: 0,
+        tts_sapi_volume: default_tts_sapi_volume(),
+        tts_openai_api_key: default_tts_openai_api_key(),
+        tts_openai_voice: default_tts_openai_voice(),
+        tts_openai_model: default_tts_openai_model(),
+        tts_openai_speed: default_tts_openai_speed(),
+        tts_elevenlabs_api_key: default_tts_elevenlabs_api_key(),
+        tts_elevenlabs_voice_id: String::new(),
+        tts_elevenlabs_model: default_tts_elevenlabs_model(),
         mute_while_recording: false,
         append_trailing_space: false,
         app_language: default_app_language(),

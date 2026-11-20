@@ -256,6 +256,133 @@ async changeSpeakAnswersSetting(enabled: boolean) : Promise<Result<null, string>
     else return { status: "error", error: e  as any };
 }
 },
+async changeTtsEngineSetting(engine: TtsEngine) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_tts_engine_setting", { engine }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeTtsSapiVoiceSetting(voiceId: string | null) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_tts_sapi_voice_setting", { voiceId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeTtsSapiRateSetting(rate: number) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_tts_sapi_rate_setting", { rate }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeTtsSapiPitchSetting(pitch: number) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_tts_sapi_pitch_setting", { pitch }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeTtsSapiVolumeSetting(volume: number) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_tts_sapi_volume_setting", { volume }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setTtsOpenaiApiKeySetting(apiKey: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_tts_openai_api_key_setting", { apiKey }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeTtsOpenaiVoiceSetting(voice: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_tts_openai_voice_setting", { voice }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeTtsOpenaiModelSetting(model: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_tts_openai_model_setting", { model }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeTtsOpenaiSpeedSetting(speed: number) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_tts_openai_speed_setting", { speed }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async setTtsElevenlabsApiKeySetting(apiKey: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("set_tts_elevenlabs_api_key_setting", { apiKey }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeTtsElevenlabsVoiceIdSetting(voiceId: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_tts_elevenlabs_voice_id_setting", { voiceId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async changeTtsElevenlabsModelSetting(model: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_tts_elevenlabs_model_setting", { model }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * The installed Windows SAPI voices for the engine's voice dropdown.
+ */
+async listTtsSapiVoices() : Promise<TtsVoiceInfo[]> {
+    return await TAURI_INVOKE("list_tts_sapi_voices");
+},
+/**
+ * Speak the sample sentence with the current settings and return any error,
+ * so the settings screen can surface engine problems (missing keys, bad
+ * voice ids, network failures) directly to the user.
+ */
+async testTtsVoice() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("test_tts_voice") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Analyze a voice-sample audio file (WAV/MP3/M4A) and suggest the closest
+ * built-in Windows voice + pitch offset for the "Match my voice" flow.
+ */
+async analyzeVoiceSampleSetting(path: string) : Promise<Result<VoiceSampleAnalysis, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("analyze_voice_sample_setting", { path }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async changeExperimentalEnabledSetting(enabled: boolean) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("change_experimental_enabled_setting", { enabled }) };
@@ -1152,7 +1279,57 @@ spoken_languages?: string[]; overlay_position?: OverlayPosition; debug_mode?: bo
  * Speak a successful LLM post-processing answer aloud (Windows TTS).
  * Only meaningful when post-processing is active; no-op on other platforms.
  */
-speak_answers_enabled?: boolean; mute_while_recording?: boolean; append_trailing_space?: boolean; app_language?: string; theme?: Theme; experimental_enabled?: boolean; lazy_stream_close?: boolean; 
+speak_answers_enabled?: boolean; 
+/**
+ * Which text-to-speech engine speaks the answers (Windows built-in,
+ * OpenAI TTS, or ElevenLabs).
+ */
+tts_engine?: TtsEngine; 
+/**
+ * Windows SAPI: the selected voice token id (None = system default).
+ */
+tts_sapi_voice_id?: string | null; 
+/**
+ * Windows SAPI speaking rate (-10..10).
+ */
+tts_sapi_rate?: number; 
+/**
+ * Windows SAPI pitch delta (-10..10); set by "Match my voice".
+ */
+tts_sapi_pitch?: number; 
+/**
+ * Windows SAPI volume (0..100).
+ */
+tts_sapi_volume?: number; 
+/**
+ * OpenAI TTS API key (stored under the "openai" entry).
+ */
+tts_openai_api_key?: SecretMap; 
+/**
+ * OpenAI TTS voice (alloy, echo, fable, onyx, nova, shimmer).
+ */
+tts_openai_voice?: string; 
+/**
+ * OpenAI TTS model.
+ */
+tts_openai_model?: string; 
+/**
+ * OpenAI TTS speed (0.25..4.0).
+ */
+tts_openai_speed?: number; 
+/**
+ * ElevenLabs API key (stored under the "elevenlabs" entry).
+ */
+tts_elevenlabs_api_key?: SecretMap; 
+/**
+ * ElevenLabs voice id (a stock voice or a cloned one from the user's
+ * own recordings).
+ */
+tts_elevenlabs_voice_id?: string; 
+/**
+ * ElevenLabs model.
+ */
+tts_elevenlabs_model?: string; mute_while_recording?: boolean; append_trailing_space?: boolean; app_language?: string; theme?: Theme; experimental_enabled?: boolean; lazy_stream_close?: boolean; 
 /**
  * Experimental, macOS only: move a Bluetooth headset (AirPods) to this
  * Mac while recording, so its microphone does not return silence while
@@ -1576,8 +1753,33 @@ export type TranscriptionOutcome =
  * Transcribing or pasting failed.
  */
 "failed"
+/**
+ * The engine that speaks the voice answers.
+ */
+export type TtsEngine = "windows" | "open_ai" | "eleven_labs"
+/**
+ * One installed Windows SAPI voice.
+ */
+export type TtsVoiceInfo = { id: string; name: string; gender: string | null }
 export type TypingTool = "auto" | "wtype" | "kwtype" | "dotool" | "ydotool" | "xdotool"
 export type VadBackend = "silero" | "earshot"
+/**
+ * Result of analyzing a user's voice sample for the "Match my voice" flow.
+ */
+export type VoiceSampleAnalysis = { 
+/**
+ * Median fundamental frequency of the sample (Hz), when enough voiced
+ * frames were detected.
+ */
+detected_f0: number | null; 
+/**
+ * The SAPI voice token id that best matches the detected voice.
+ */
+suggested_voice_id: string | null; 
+/**
+ * SAPI pitch delta to approximate the detected voice.
+ */
+suggested_pitch: number }
 export type WindowsMicrophonePermissionStatus = { supported: boolean; overall_access: PermissionAccess; device_access: PermissionAccess; app_access: PermissionAccess; desktop_app_access: PermissionAccess }
 
 /** tauri-specta globals **/

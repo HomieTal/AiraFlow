@@ -1,5 +1,5 @@
 // Re-export all audio components
-mod decode;
+pub(crate) mod decode;
 mod device;
 mod sink;
 mod utils;

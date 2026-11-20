@@ -19,7 +19,8 @@
     "postProcessing": "Постобработка",
     "history": "История",
     "debug": "Отладка",
-    "about": "О программе"
+    "about": "О программе",
+    "voice": "Voice"
   },
   "onboarding": {
     "customModelDescription": "Официально не поддерживается",
@@ -896,6 +897,83 @@
           "description": "Высокопроизводительная модель автоматического распознавания речи OpenAI Whisper",
           "details": "Aira Flow использует ggml для быстрого локального преобразования речи в текст. Спасибо великолепной работе Георгия Герганова и участников."
         }
+      }
+    },
+    "voice": {
+      "speakAnswersGroup": {
+        "title": "Voice answers"
+      },
+      "engine": {
+        "title": "Voice engine",
+        "windows": "Windows built-in",
+        "openai": "OpenAI",
+        "elevenlabs": "ElevenLabs"
+      },
+      "windows": {
+        "title": "Windows voice",
+        "voice": {
+          "label": "Voice",
+          "description": "The installed Windows voice that speaks the answers."
+        },
+        "voicePlaceholder": "Select a voice...",
+        "sampleFilter": "Audio sample",
+        "rate": {
+          "label": "Speaking rate",
+          "description": "How fast the voice speaks (-10 slowest, 10 fastest)."
+        },
+        "volume": {
+          "label": "Voice volume",
+          "description": "Loudness of the spoken answers."
+        },
+        "match": {
+          "label": "Match my voice",
+          "description": "Analyze a sample of your voice and tune the built-in voice toward your pitch. Pick a recording of you speaking for 10+ seconds.",
+          "button": "Load voice sample",
+          "matchNoVoice": "Could not detect your pitch in that sample — try a longer recording.",
+          "matchApplied": "Done! Detected {f0} Hz pitch — the built-in voice is tuned toward it.",
+          "matchFailed": "Could not analyze that sample. Try a WAV or MP3 file."
+        }
+      },
+      "openai": {
+        "title": "OpenAI voice",
+        "apiKey": {
+          "label": "OpenAI API key",
+          "description": "The key used for spoken answers. Billing per character."
+        },
+        "apiKeyPlaceholder": "sk-...",
+        "voice": {
+          "label": "Voice",
+          "description": "One of OpenAI's stock voices."
+        },
+        "model": {
+          "label": "Model",
+          "description": "The TTS model to use."
+        },
+        "speed": {
+          "label": "Speed",
+          "description": "Playback speed of the spoken answer (0.25x-4x)."
+        }
+      },
+      "elevenlabs": {
+        "title": "ElevenLabs voice",
+        "apiKey": {
+          "label": "ElevenLabs API key",
+          "description": "The key used for spoken answers. Supports cloned voices."
+        },
+        "apiKeyPlaceholder": "xi-api-key",
+        "voiceId": {
+          "label": "Voice ID",
+          "description": "The ElevenLabs voice id to use — a stock voice or a clone created from recordings of your own voice."
+        },
+        "model": {
+          "label": "Model",
+          "description": "The ElevenLabs TTS model to use."
+        }
+      },
+      "test": {
+        "title": "Test",
+        "button": "Test voice",
+        "running": "Speaking..."
       }
     }
   },

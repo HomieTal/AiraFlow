@@ -12,6 +12,7 @@ import type {
   LanguageDetectionMode,
 } from "@/bindings";
 import { commands } from "@/bindings";
+import type { TtsEngine } from "@/bindings";
 import { notify } from "@/stores/noticeStore";
 
 interface SettingsStore {
@@ -168,6 +169,24 @@ const settingUpdaters: {
     commands.setPostProcessSelectedPrompt(value as string),
   speak_answers_enabled: (value) =>
     commands.changeSpeakAnswersSetting(value as boolean),
+  tts_engine: (value) => commands.changeTtsEngineSetting(value as TtsEngine),
+  tts_sapi_voice_id: (value) =>
+    commands.changeTtsSapiVoiceSetting(value as string | null),
+  tts_sapi_rate: (value) => commands.changeTtsSapiRateSetting(value as number),
+  tts_sapi_pitch: (value) => commands.changeTtsSapiPitchSetting(value as number),
+  tts_sapi_volume: (value) => commands.changeTtsSapiVolumeSetting(value as number),
+  tts_openai_api_key: (value) =>
+    commands.setTtsOpenaiApiKeySetting((value as Record<string, string>)?.["openai"] ?? ""),
+  tts_openai_voice: (value) => commands.changeTtsOpenaiVoiceSetting(value as string),
+  tts_openai_model: (value) => commands.changeTtsOpenaiModelSetting(value as string),
+  tts_openai_speed: (value) => commands.changeTtsOpenaiSpeedSetting(value as number),
+  tts_elevenlabs_api_key: (value) =>
+    commands.setTtsElevenlabsApiKeySetting(
+      (value as Record<string, string>)?.["elevenlabs"] ?? "",
+    ),
+  tts_elevenlabs_voice_id: (value) =>
+    commands.changeTtsElevenlabsVoiceIdSetting(value as string),
+  tts_elevenlabs_model: (value) => commands.changeTtsElevenlabsModelSetting(value as string),
   mute_while_recording: (value) =>
     commands.changeMuteWhileRecordingSetting(value as boolean),
   append_trailing_space: (value) =>

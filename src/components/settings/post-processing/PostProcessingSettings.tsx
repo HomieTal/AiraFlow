@@ -12,7 +12,6 @@ import {
 } from "@/components/ui";
 import { Button } from "../../ui/Button";
 import { ResetButton } from "../../ui/ResetButton";
-import { SpeakAnswers } from "./SpeakAnswers";
 import { Input } from "../../ui/Input";
 
 import { ProviderSelect } from "../PostProcessingSettingsApi/ProviderSelect";
@@ -474,7 +473,6 @@ export const PostProcessingSettings: React.FC = () => {
           descriptionMode="tooltip"
           grouped={true}
         />
-        <SpeakAnswers grouped={true} />
       </SettingsGroup>
 
       <SettingsGroup title={t("settings.postProcessing.api.title")}>

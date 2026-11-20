@@ -1,7 +1,8 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { AudioLines, Cog, FlaskConical, History, Info, Sparkles, Cpu } from "lucide-react";
+import { AudioLines, Cog, FlaskConical, History, Info, Sparkles, Cpu, Volume2 } from "lucide-react";
 import AiraFlowTextLogo from "./icons/AiraFlowTextLogo";
+import { VoiceSettings } from "./settings/VoiceSettings";
 import { useSettings } from "../hooks/useSettings";
 import {
   GeneralSettings,
@@ -47,6 +48,12 @@ export const SECTIONS_CONFIG = {
     labelKey: "sidebar.models",
     icon: Cpu,
     component: ModelsSettings,
+    enabled: () => true,
+  },
+  voice: {
+    labelKey: "sidebar.voice",
+    icon: Volume2,
+    component: VoiceSettings,
     enabled: () => true,
   },
   advanced: {

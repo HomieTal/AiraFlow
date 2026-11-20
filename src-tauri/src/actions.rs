@@ -904,6 +904,7 @@ impl ShortcutAction for TranscribeAction {
                                     );
                                     let speak_text = final_text.clone();
                                     let rm_for_speech = Arc::clone(&rm);
+                                    let settings_for_speech = get_settings(&ah);
                                     let _ = std::thread::Builder::new()
                                         .name("speak".into())
                                         .spawn(move || {
@@ -913,7 +914,11 @@ impl ShortcutAction for TranscribeAction {
                                                 debug!("Cancelled before speaking the answer");
                                                 return;
                                             }
-                                            crate::tts::speak_text(&speak_text);
+                                            let cfg =
+                                                crate::tts::TtsConfig::from_settings(
+                                                    &settings_for_speech,
+                                                );
+                                            crate::tts::speak_text(&speak_text, &cfg);
                                         })
                                         .map_err(|e| {
                                             warn!("Failed to start the speak thread: {e}")
