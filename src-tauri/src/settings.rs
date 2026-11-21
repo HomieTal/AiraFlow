@@ -1577,8 +1577,9 @@ fn self_update_possible() -> bool {
 pub fn update_checks_forced_disabled() -> bool {
     use std::sync::OnceLock;
     static IS_UPDATER_DISABLED: OnceLock<bool> = OnceLock::new();
-    *IS_UPDATER_DISABLED
-        .get_or_init(|| utils::env_flag_enabled("AIRA_FLOW_DISABLE_UPDATER") || !self_update_possible())
+    *IS_UPDATER_DISABLED.get_or_init(|| {
+        utils::env_flag_enabled("AIRA_FLOW_DISABLE_UPDATER") || !self_update_possible()
+    })
 }
 
 /// Effective updater state: the user's stored preference, overridden to `false`

@@ -930,8 +930,12 @@
           "description": "Analyze a sample of your voice and tune the built-in voice toward your pitch. Pick a recording of you speaking for 10+ seconds.",
           "button": "Load voice sample",
           "matchNoVoice": "Could not detect your pitch in that sample — try a longer recording.",
-          "matchApplied": "Done! Detected {f0} Hz pitch — the built-in voice is tuned toward it.",
+          "matchApplied": "Done! Detected {{f0}} Hz pitch — the built-in voice is tuned toward it.",
           "matchFailed": "Could not analyze that sample. Try a WAV or MP3 file."
+        },
+        "pitch": {
+          "label": "Voice pitch",
+          "description": "Fine-tune the pitch of the spoken answers (-10 lowest, 10 highest). Set automatically by Match my voice."
         }
       },
       "openai": {

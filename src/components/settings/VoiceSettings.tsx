@@ -58,7 +58,7 @@ export const VoiceSettings: React.FC = () => {
       {engine === "eleven_labs" && <ElevenLabsVoiceSettings />}
 
       <SettingsGroup title={t("settings.voice.test.title")}>
-        <TestVoiceButton />
+        <TestVoiceButton engine={engine} />
       </SettingsGroup>
     </div>
   );
@@ -103,19 +103,19 @@ const WindowsVoiceSettings: React.FC = () => {
       if (result.status === "error") throw new Error(result.error);
       const analysis = result.data;
       if (!analysis.detected_f0 || !analysis.suggested_voice_id) {
-        setAnalysisNote(t("settings.voice.windows.matchNoVoice"));
+        setAnalysisNote(t("settings.voice.windows.match.matchNoVoice"));
         return;
       }
       await updateSetting("tts_sapi_voice_id", analysis.suggested_voice_id);
       await updateSetting("tts_sapi_pitch", analysis.suggested_pitch);
       setAnalysisNote(
-        t("settings.voice.windows.matchApplied", {
+        t("settings.voice.windows.match.matchApplied", {
           f0: Math.round(analysis.detected_f0),
         }),
       );
     } catch (error) {
       console.error("Voice sample analysis failed:", error);
-      setAnalysisNote(t("settings.voice.windows.matchFailed"));
+      setAnalysisNote(t("settings.voice.windows.match.matchFailed"));
     } finally {
       setAnalyzing(false);
     }
@@ -144,6 +144,17 @@ const WindowsVoiceSettings: React.FC = () => {
         step={1}
         label={t("settings.voice.windows.rate.label")}
         description={t("settings.voice.windows.rate.description")}
+        grouped={true}
+        formatValue={(v) => String(v)}
+      />
+      <Slider
+        value={(getSetting("tts_sapi_pitch") as number) || 0}
+        onChange={(value) => updateSetting("tts_sapi_pitch", value)}
+        min={-10}
+        max={10}
+        step={1}
+        label={t("settings.voice.windows.pitch.label")}
+        description={t("settings.voice.windows.pitch.description")}
         grouped={true}
         formatValue={(v) => String(v)}
       />
@@ -292,16 +303,22 @@ const ElevenLabsVoiceSettings: React.FC = () => {
 };
 
 /** Speak the sample sentence with the current voice settings. */
-const TestVoiceButton: React.FC = () => {
+const TestVoiceButton: React.FC<{ engine: TtsEngine }> = ({ engine }) => {
   const { t } = useTranslation();
   const [testing, setTesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // A stale failure from the previous engine would mislead, so clear it.
+  useEffect(() => {
+    setError(null);
+  }, [engine]);
 
   const runTest = async () => {
     setTesting(true);
     setError(null);
     try {
-      await commands.testTtsVoice();
+      const result = await commands.testTtsVoice();
+      if (result.status === "error") throw new Error(result.error);
     } catch (err) {
       setError(String(err));
     } finally {

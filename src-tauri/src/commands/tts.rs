@@ -4,7 +4,10 @@ use crate::settings::{get_settings, write_settings, AppSettings, TtsEngine};
 use crate::tts::{self, TtsConfig, TtsVoiceInfo};
 use tauri::AppHandle;
 
-fn update_tts_settings(app: &AppHandle, apply: impl FnOnce(&mut AppSettings)) -> Result<(), String> {
+fn update_tts_settings(
+    app: &AppHandle,
+    apply: impl FnOnce(&mut AppSettings),
+) -> Result<(), String> {
     let mut settings = get_settings(app);
     apply(&mut settings);
     write_settings(app, settings);
@@ -19,7 +22,10 @@ pub fn change_tts_engine_setting(app: AppHandle, engine: TtsEngine) -> Result<()
 
 #[tauri::command]
 #[specta::specta]
-pub fn change_tts_sapi_voice_setting(app: AppHandle, voice_id: Option<String>) -> Result<(), String> {
+pub fn change_tts_sapi_voice_setting(
+    app: AppHandle,
+    voice_id: Option<String>,
+) -> Result<(), String> {
     update_tts_settings(&app, |s| s.tts_sapi_voice_id = voice_id)
 }
 
@@ -78,7 +84,10 @@ pub fn set_tts_elevenlabs_api_key_setting(app: AppHandle, api_key: String) -> Re
 
 #[tauri::command]
 #[specta::specta]
-pub fn change_tts_elevenlabs_voice_id_setting(app: AppHandle, voice_id: String) -> Result<(), String> {
+pub fn change_tts_elevenlabs_voice_id_setting(
+    app: AppHandle,
+    voice_id: String,
+) -> Result<(), String> {
     update_tts_settings(&app, |s| s.tts_elevenlabs_voice_id = voice_id)
 }
 
@@ -114,9 +123,12 @@ pub async fn test_tts_voice(app: AppHandle) -> Result<(), String> {
 /// built-in Windows voice + pitch offset for the "Match my voice" flow.
 #[tauri::command]
 #[specta::specta]
-pub async fn analyze_voice_sample_setting(path: String) -> Result<tts::VoiceSampleAnalysis, String> {
-    tauri::async_runtime::spawn_blocking(move || tts::analyze_voice_sample(&std::path::PathBuf::from(path)))
-        .await
-        .map_err(|e| format!("Voice sample analysis failed: {e}"))?
+pub async fn analyze_voice_sample_setting(
+    path: String,
+) -> Result<tts::VoiceSampleAnalysis, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        tts::analyze_voice_sample(&std::path::PathBuf::from(path))
+    })
+    .await
+    .map_err(|e| format!("Voice sample analysis failed: {e}"))?
 }
-

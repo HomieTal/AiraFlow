@@ -9,8 +9,8 @@
 //! The active implementation is determined by the `keyboard_implementation`
 //! setting and can be changed at runtime.
 
-mod handler;
 pub mod aira_flow_keys;
+mod handler;
 pub mod tauri_impl;
 
 use log::{debug, error, info, warn};
@@ -391,7 +391,9 @@ pub fn change_keyboard_implementation_setting(
     }
 
     // Initialize new implementation if needed (AiraFlowKeys needs state)
-    if new_impl == KeyboardImplementation::AiraFlowKeys && initialize_aira_flow_keys_with_rollback(&app)? {
+    if new_impl == KeyboardImplementation::AiraFlowKeys
+        && initialize_aira_flow_keys_with_rollback(&app)?
+    {
         // Shortcuts already registered during init.
         crate::secure_input::reconcile_fallback(&app);
         return Ok(ImplementationChangeResult {
@@ -478,7 +480,9 @@ fn unregister_all_shortcuts(app: &AppHandle, implementation: KeyboardImplementat
 
         let result = match implementation {
             KeyboardImplementation::Tauri => tauri_impl::unregister_shortcut(app, binding),
-            KeyboardImplementation::AiraFlowKeys => aira_flow_keys::unregister_shortcut(app, binding),
+            KeyboardImplementation::AiraFlowKeys => {
+                aira_flow_keys::unregister_shortcut(app, binding)
+            }
             KeyboardImplementation::None => Ok(()),
         };
 
@@ -559,7 +563,10 @@ fn register_all_shortcuts_for_implementation(
 
 /// Initialize AiraFlowKeys if not already initialized, with rollback on failure
 fn initialize_aira_flow_keys_with_rollback(app: &AppHandle) -> Result<bool, String> {
-    if app.try_state::<aira_flow_keys::AiraFlowKeysState>().is_some() {
+    if app
+        .try_state::<aira_flow_keys::AiraFlowKeysState>()
+        .is_some()
+    {
         return Ok(false); // Already initialized, caller should continue
     }
 

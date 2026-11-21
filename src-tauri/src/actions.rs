@@ -908,21 +908,17 @@ impl ShortcutAction for TranscribeAction {
                                     let _ = std::thread::Builder::new()
                                         .name("speak".into())
                                         .spawn(move || {
-                                            if rm_for_speech
-                                                .was_cancelled_since(cancel_generation)
+                                            if rm_for_speech.was_cancelled_since(cancel_generation)
                                             {
                                                 debug!("Cancelled before speaking the answer");
                                                 return;
                                             }
-                                            let cfg =
-                                                crate::tts::TtsConfig::from_settings(
-                                                    &settings_for_speech,
-                                                );
+                                            let cfg = crate::tts::TtsConfig::from_settings(
+                                                &settings_for_speech,
+                                            );
                                             crate::tts::speak_text(&speak_text, &cfg);
                                         })
-                                        .map_err(|e| {
-                                            warn!("Failed to start the speak thread: {e}")
-                                        })
+                                        .map_err(|e| warn!("Failed to start the speak thread: {e}"))
                                         .ok();
                                 }
                                 let rm_for_paste = Arc::clone(&rm);

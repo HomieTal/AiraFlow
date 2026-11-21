@@ -20,7 +20,6 @@ fn wide0(s: &str) -> Vec<u16> {
     s.encode_utf16().chain(std::iter::once(0)).collect()
 }
 
-
 /// The resolved TTS configuration for one utterance.
 #[derive(Clone, Debug)]
 pub struct TtsConfig {
@@ -117,7 +116,12 @@ pub fn test_voice_blocking(text: &str, cfg: &TtsConfig) -> Result<(), String> {
     if text.trim().is_empty() {
         return Ok(());
     }
-    dispatch(&text, cfg).map_err(|e| format!("{e:#}"))
+    let result = dispatch(&text, cfg).map_err(|e| format!("{e:#}"));
+    match &result {
+        Ok(()) => info!("TTS test succeeded (engine {:?})", cfg.engine),
+        Err(err) => warn!("TTS test failed (engine {:?}): {err}", cfg.engine),
+    }
+    result
 }
 
 fn dispatch(text: &str, cfg: &TtsConfig) -> anyhow::Result<()> {
@@ -231,26 +235,18 @@ pub fn list_sapi_voices() -> Vec<TtsVoiceInfo> {
             .map_err(|e| anyhow::anyhow!("GetVoices: {e}"))?;
         let count = unsafe { tokens.Count() }.map_err(|e| anyhow::anyhow!("Count: {e}"))?;
         for i in 0..count.max(0) {
-            let token = unsafe { tokens.Item(i) }
-                .map_err(|e| anyhow::anyhow!("voice item {i}: {e}"))?;
+            let token =
+                unsafe { tokens.Item(i) }.map_err(|e| anyhow::anyhow!("voice item {i}: {e}"))?;
             let id = unsafe { token.Id() }
                 .map(|b| b.to_string())
                 .unwrap_or_default();
-            let name = unsafe {
-                token.GetAttribute(&BSTR::from("Name"))
-            }
-            .map(|b| b.to_string())
-            .unwrap_or_else(|_| id.clone());
-            let gender = unsafe {
-                token.GetAttribute(&BSTR::from("Gender"))
-            }
-            .map(|b| b.to_string())
-            .ok();
-            voices.push(TtsVoiceInfo {
-                id,
-                name,
-                gender,
-            });
+            let name = unsafe { token.GetAttribute(&BSTR::from("Name")) }
+                .map(|b| b.to_string())
+                .unwrap_or_else(|_| id.clone());
+            let gender = unsafe { token.GetAttribute(&BSTR::from("Gender")) }
+                .map(|b| b.to_string())
+                .ok();
+            voices.push(TtsVoiceInfo { id, name, gender });
         }
         Ok(())
     })();
@@ -285,8 +281,8 @@ fn sapi_token_by_id(
         .map_err(|e| anyhow::anyhow!("GetVoices: {e}"))?;
     let count = unsafe { tokens.Count() }.map_err(|e| anyhow::anyhow!("Count: {e}"))?;
     for i in 0..count.max(0) {
-        let token = unsafe { tokens.Item(i) }
-            .map_err(|e| anyhow::anyhow!("voice item {i}: {e}"))?;
+        let token =
+            unsafe { tokens.Item(i) }.map_err(|e| anyhow::anyhow!("voice item {i}: {e}"))?;
         let id = unsafe { token.Id() }
             .map(|b| b.to_string())
             .unwrap_or_default();
@@ -442,6 +438,23 @@ pub fn analyze_voice_sample(path: &std::path::Path) -> Result<VoiceSampleAnalysi
     // 155 Hz. SAPI pitch deltas span ±10, each step ≈ a few percent, so the
     // delta maps the offset between the detected pitch and the voice's
     // natural centre onto the available range.
+    let (suggested_voice_id, suggested_pitch) = pick_voice_and_pitch(&voices, f0);
+
+    Ok(VoiceSampleAnalysis {
+        detected_f0: Some(f0),
+        suggested_voice_id,
+        suggested_pitch,
+    })
+}
+
+/// Match a detected pitch to the closest installed voice and pitch offset.
+/// Male voices centre on ~120 Hz, female voices on ~190 Hz; the split sits at
+/// 155 Hz. SAPI pitch deltas span ±10, each step ≈ a few percent, so the
+/// delta maps the offset between the detected pitch and the voice's natural
+/// centre onto the available range. Falls back to the first installed voice
+/// when no voice carries the wanted gender attribute.
+#[cfg(windows)]
+fn pick_voice_and_pitch(voices: &[TtsVoiceInfo], f0: f64) -> (Option<String>, i32) {
     let male = f0 < 155.0;
     let center = if male { 120.0 } else { 190.0 };
     let want_gender = if male { "male" } else { "female" };
@@ -459,12 +472,7 @@ pub fn analyze_voice_sample(path: &std::path::Path) -> Result<VoiceSampleAnalysi
 
     let delta = (((f0 - center) / center) * 25.0).round();
     let suggested_pitch = delta.clamp(-10.0, 10.0) as i32;
-
-    Ok(VoiceSampleAnalysis {
-        detected_f0: Some(f0),
-        suggested_voice_id,
-        suggested_pitch,
-    })
+    (suggested_voice_id, suggested_pitch)
 }
 
 /// Non-Windows stub: the "Match my voice" flow needs the SAPI engine.
@@ -488,21 +496,81 @@ fn estimate_pitch(samples: &[f32], sample_rate: u32) -> Option<f64> {
         let window = &samples[start..start + frame];
         let rms = (window.iter().map(|s| s * s).sum::<f32>() / frame as f32).sqrt();
         if rms > 0.005 {
-            let mut best_corr = 0f32;
-            let mut best_lag = 0usize;
+            // Normalized autocorrelation per lag. A waveform also correlates
+            // with itself at multiples of its period, so after the global peak
+            // is found, equal-height peaks at lag/2 (the classic octave error)
+            // are folded down to the true fundamental. Parabolic interpolation
+            // then refines the lag to sub-sample accuracy.
+            let mut correlations = Vec::with_capacity(max_lag - min_lag + 1);
             for lag in min_lag..=max_lag {
                 let mut corr = 0f32;
                 for j in 0..frame - lag {
                     corr += window[j] * window[j + lag];
                 }
-                corr /= (frame - lag) as f32;
-                if corr > best_corr {
-                    best_corr = corr;
-                    best_lag = lag;
+                correlations.push((lag, corr / (frame - lag) as f32));
+            }
+            let mut max_corr = 0f32;
+            let mut lag = 0usize;
+            for &(l, c) in &correlations {
+                if c > max_corr {
+                    max_corr = c;
+                    lag = l;
                 }
             }
-            if best_lag >= min_lag && best_corr > 1e-4 {
-                f0s.push(sample_rate as f64 / best_lag as f64);
+            if max_corr > 1e-4 && lag >= min_lag {
+                // Fold octave multiples: corr at lag/2 ~ equal to the peak
+                // means the true fundamental is at lag/2.
+                while lag / 2 >= min_lag {
+                    let Some(half_corr) = correlations
+                        .iter()
+                        .find(|(l, _)| *l == lag / 2)
+                        .map(|(_, c)| *c)
+                    else {
+                        break;
+                    };
+                    if half_corr >= max_corr * 0.9 {
+                        lag /= 2;
+                    } else {
+                        break;
+                    }
+                }
+                // Parabolic refinement of the peak lag.
+                if lag > min_lag && lag < max_lag {
+                    let Some(c_m1) = correlations
+                        .iter()
+                        .find(|(l, _)| *l == lag - 1)
+                        .map(|(_, c)| *c)
+                    else {
+                        f0s.push(sample_rate as f64 / lag as f64);
+                        continue;
+                    };
+                    let Some(c_0) = correlations
+                        .iter()
+                        .find(|(l, _)| *l == lag)
+                        .map(|(_, c)| *c)
+                    else {
+                        f0s.push(sample_rate as f64 / lag as f64);
+                        continue;
+                    };
+                    let Some(c_p1) = correlations
+                        .iter()
+                        .find(|(l, _)| *l == lag + 1)
+                        .map(|(_, c)| *c)
+                    else {
+                        f0s.push(sample_rate as f64 / lag as f64);
+                        continue;
+                    };
+                    let denom = c_m1 - 2.0 * c_0 + c_p1;
+                    let refined = if denom.abs() > f32::EPSILON {
+                        let shift = (0.5 * (c_m1 - c_p1) / denom).clamp(-1.0, 1.0);
+                        (lag as f64 + shift as f64).max(min_lag as f64)
+                    } else {
+                        lag as f64
+                    };
+                    f0s.push(sample_rate as f64 / refined);
+                } else {
+                    f0s.push(sample_rate as f64 / lag as f64);
+                }
             }
         }
         start += hop;
@@ -569,5 +637,140 @@ fn strip_markdown_for_speech(text: &str) -> String {
 /// literally instead of being parsed or rejected as SSML.
 #[cfg(windows)]
 fn escape_for_sapi_xml(text: &str) -> String {
-    text.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+    text.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+}
+
+#[cfg(all(test, windows))]
+mod tests {
+    use super::*;
+
+    fn sine(f0: f64, seconds: f64, sample_rate: u32) -> Vec<f32> {
+        let n = (seconds * sample_rate as f64) as usize;
+        (0..n)
+            .map(|i| {
+                let t = i as f64 / sample_rate as f64;
+                0.5 * (2.0 * std::f64::consts::PI * f0 * t).sin() as f32
+            })
+            .collect()
+    }
+
+    fn assert_close(detected: Option<f64>, expected: f64) {
+        let f0 = detected.expect("expected a detected pitch");
+        assert!(
+            (f0 - expected).abs() / expected < 0.05,
+            "detected {f0:.1} Hz, expected ~{expected:.1} Hz"
+        );
+    }
+
+    #[test]
+    fn detects_male_range_pitch() {
+        assert_close(estimate_pitch(&sine(110.0, 2.0, 16_000), 16_000), 110.0);
+    }
+
+    #[test]
+    fn detects_female_range_pitch() {
+        assert_close(estimate_pitch(&sine(200.0, 2.0, 16_000), 16_000), 200.0);
+    }
+
+    #[test]
+    fn detects_fundamental_despite_second_harmonic() {
+        // A voice-like tone: 110 Hz plus a 10% second harmonic. The estimator
+        // must hold the fundamental instead of octave-folding onto 220 Hz.
+        let sr = 16_000u32;
+        let n = sr as usize * 2;
+        let samples: Vec<f32> = (0..n)
+            .map(|i| {
+                let t = i as f64 / sr as f64;
+                (0.4 * (2.0 * std::f64::consts::PI * 110.0 * t).sin()
+                    + 0.04 * (2.0 * std::f64::consts::PI * 220.0 * t).sin()) as f32
+            })
+            .collect();
+        assert_close(estimate_pitch(&samples, sr), 110.0);
+    }
+
+    #[test]
+    fn tracks_each_segment_of_a_changing_voice() {
+        // The median of a bimodal signal sits inside whichever segment holds
+        // more frames, so tracking is asserted per segment.
+        let first = sine(110.0, 1.0, 16_000);
+        let second = sine(220.0, 1.0, 16_000);
+        assert_close(estimate_pitch(&first, 16_000), 110.0);
+        assert_close(estimate_pitch(&second, 16_000), 220.0);
+    }
+
+    #[test]
+    fn silence_yields_no_pitch() {
+        let silence = vec![0.0f32; 16_000 * 2];
+        assert!(estimate_pitch(&silence, 16_000).is_none());
+    }
+
+    #[test]
+    fn very_short_clip_is_rejected() {
+        let clip = sine(120.0, 0.05, 16_000);
+        assert!(estimate_pitch(&clip, 16_000).is_none());
+    }
+
+    #[test]
+    fn match_picks_male_voice_for_low_pitch() {
+        let voices = vec![
+            TtsVoiceInfo {
+                id: "david".into(),
+                name: "David".into(),
+                gender: Some("Male".into()),
+            },
+            TtsVoiceInfo {
+                id: "zira".into(),
+                name: "Zira".into(),
+                gender: Some("Female".into()),
+            },
+        ];
+        let (id, pitch) = pick_voice_and_pitch(&voices, 110.0);
+        assert_eq!(id.as_deref(), Some("david"));
+        assert_eq!(pitch, -2); // (110-120)/120*25 = -2.08 -> -2
+    }
+
+    #[test]
+    fn match_picks_female_voice_for_high_pitch() {
+        let voices = vec![
+            TtsVoiceInfo {
+                id: "david".into(),
+                name: "David".into(),
+                gender: Some("Male".into()),
+            },
+            TtsVoiceInfo {
+                id: "zira".into(),
+                name: "Zira".into(),
+                gender: Some("Female".into()),
+            },
+        ];
+        let (id, pitch) = pick_voice_and_pitch(&voices, 250.0);
+        assert_eq!(id.as_deref(), Some("zira"));
+        assert_eq!(pitch, 8); // (250-190)/190*25 = 7.9 -> 8
+    }
+
+    #[test]
+    fn match_clamps_extreme_pitches() {
+        let voices = vec![TtsVoiceInfo {
+            id: "david".into(),
+            name: "David".into(),
+            gender: Some("Male".into()),
+        }];
+        let (_, pitch) = pick_voice_and_pitch(&voices, 60.0);
+        assert_eq!(pitch, -10);
+        let (_, pitch) = pick_voice_and_pitch(&voices, 400.0);
+        assert_eq!(pitch, 10);
+    }
+
+    #[test]
+    fn match_falls_back_to_first_voice_without_gender_match() {
+        let voices = vec![TtsVoiceInfo {
+            id: "custom".into(),
+            name: "Custom".into(),
+            gender: None,
+        }];
+        let (id, _) = pick_voice_and_pitch(&voices, 250.0);
+        assert_eq!(id.as_deref(), Some("custom"));
+    }
 }
