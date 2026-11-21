@@ -1,10 +1,5 @@
 import { create } from "zustand";
-import {
-  CHINESE_SCRIPTS,
-  suggestedLanguages,
-  suggestedScript,
-  type ChineseScriptChoice,
-} from "@/lib/utils/languageSuggestions";
+import { suggestedLanguages } from "@/lib/utils/languageSuggestions";
 
 export type OnboardingStep =
   | "welcome"
@@ -28,7 +23,6 @@ interface Persisted {
   step: OnboardingStep;
   /** Spoken languages (codes), in the order they were picked. */
   languages: string[];
-  script: ChineseScriptChoice;
   /** The selected model (catalog id); null means the recommendation. */
   modelId: string | null;
   /** A model picked from the full list: it stays on Model as a fourth row. */
@@ -62,7 +56,6 @@ const STORAGE_KEY = "aira-flow.onboarding";
 const fresh = (): Persisted => ({
   step: "welcome",
   languages: suggestedLanguages(),
-  script: suggestedScript(),
   modelId: null,
   extraModelId: null,
   downloadId: null,
@@ -94,7 +87,6 @@ const load = (): Persisted => {
     return {
       step: pick("step", (v) => STEP_ORDER.includes(v as OnboardingStep)),
       languages: pick("languages", isStringList),
-      script: pick("script", (v) => CHINESE_SCRIPTS.some((c) => c.id === v)),
       modelId: pick("modelId", isId),
       extraModelId: pick("extraModelId", isId),
       downloadId: pick("downloadId", isId),
@@ -123,7 +115,6 @@ const save = (state: OnboardingState) => {
   const persisted: Persisted = {
     step: state.step,
     languages: state.languages,
-    script: state.script,
     modelId: state.modelId,
     extraModelId: state.extraModelId,
     downloadId: state.downloadId,

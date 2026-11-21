@@ -100,13 +100,6 @@
       "noMatch": "Nessuna lingua corrisponde a «{{query}}». I modelli di Aira Flow coprono circa 100 lingue; altre sono nelle impostazioni.",
       "appLanguage": "Lingua dell'app",
       "menusIn": "Menu in <b>{{language}}</b>",
-      "chinese": {
-        "question": "Parli {{languages}}. Quali caratteri deve scrivere Aira Flow?",
-        "label": "Caratteri cinesi",
-        "zh-Hans": "Semplificato",
-        "zh-Hant": "Taiwan",
-        "zh-HK": "Hong Kong"
-      },
       "hint": {
         "pickOne": "Scegli almeno una lingua",
         "weak_one": "{{languages}}: nessun modello la riconosce ancora bene",
@@ -616,16 +609,6 @@
       "fillerWordRemoval": {
         "title": "Rimuovi le parole riempitive",
         "description": "Rimuove le parole di esitazione più comuni dalle trascrizioni. Disattiva per mantenerle."
-      },
-      "chineseScript": {
-        "title": "Scrittura cinese",
-        "description": "Scrive le trascrizioni in mandarino e cantonese in caratteri semplificati, oppure in caratteri tradizionali come si scrivono a Taiwan o a Hong Kong. Le altre lingue restano invariate.",
-        "options": {
-          "asTranscribed": "Come trascritto",
-          "simplified": "Semplificato",
-          "traditionalTw": "Tradizionale (Taiwan)",
-          "traditionalHk": "Tradizionale (Hong Kong)"
-        }
       }
     },
     "postProcessing": {

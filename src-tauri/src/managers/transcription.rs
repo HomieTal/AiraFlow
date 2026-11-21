@@ -3,7 +3,6 @@ use crate::audio_toolkit::{
     apply_custom_words, detect_output_language, normalize_transcription_output,
     remove_filler_words, OutputLanguageEvidence,
 };
-use crate::chinese_script::{chinese_variety_for_text, convert_chinese_script};
 use crate::engine_supervisor::{
     CancelMark, DeviceInfo, DeviceSelector, EngineError, EngineSupervisor, LoadSpec, LoadedInfo,
     Unloading,
@@ -17,7 +16,7 @@ use crate::managers::model::ModelManager;
 use crate::notices::{self, Notice, NoticeCode, NoticeSource};
 use crate::overlay;
 use crate::settings::{
-    get_settings, AppSettings, ChineseScript, ModelUnloadTimeout, TranscribeAcceleratorSetting,
+    get_settings, AppSettings, ModelUnloadTimeout, TranscribeAcceleratorSetting,
 };
 use anyhow::Result;
 use chunked::{ChunkSetup, ChunkedDecode};
@@ -1712,14 +1711,6 @@ fn post_process_transcription_text(
             other => other.clone(),
         };
 
-        // Convert the script before custom words so they match in the script
-        // the user writes in. Decided from the text, since mixed Mandarin/English
-        // is often detected as English; Japanese is never rewritten.
-        let raw = match chinese_variety_for_text(&raw, &output_language) {
-            Some(variety) => convert_chinese_script(&raw, variety, settings.chinese_script),
-            None => raw,
-        };
-
         let corrected = if !settings.custom_words.is_empty() && !custom_words_already_prompted {
             apply_custom_words(
                 &raw,
@@ -1745,35 +1736,6 @@ fn post_process_transcription_text(
             String::new()
         }
     })
-}
-
-/// Converts live-preview text into the configured Chinese script as it
-/// streams, by the same rule as the final paste so the two agree.
-struct PreviewScript {
-    script: ChineseScript,
-    output_language: OutputLanguageEvidence,
-}
-
-impl PreviewScript {
-    fn new(script: ChineseScript, output_language: &OutputLanguageEvidence) -> Self {
-        Self {
-            script,
-            output_language: output_language.clone(),
-        }
-    }
-
-    /// Converts the model's raw committed/tentative text. Always fed the raw
-    /// text, never a previous conversion.
-    fn convert(&self, committed: &str, tentative: &str) -> (String, String) {
-        let text = format!("{committed}{tentative}");
-        match chinese_variety_for_text(&text, &self.output_language) {
-            Some(variety) => (
-                convert_chinese_script(committed, variety, self.script),
-                convert_chinese_script(tentative, variety, self.script),
-            ),
-            None => (committed.to_string(), tentative.to_string()),
-        }
-    }
 }
 
 /// Optional text cleanup must never discard a successful model result. The
@@ -2060,85 +2022,6 @@ mod tests {
         });
 
         assert_eq!(result, raw);
-    }
-
-    #[test]
-    fn non_chinese_output_is_never_converted() {
-        let settings = AppSettings {
-            chinese_script: ChineseScript::TraditionalTw,
-            ..Default::default()
-        };
-        for evidence in [
-            OutputLanguageEvidence::ModelDetected("ja".to_string()),
-            OutputLanguageEvidence::UserSelected("en".to_string()),
-            OutputLanguageEvidence::TranslatedToEnglish,
-        ] {
-            let result = post_process_transcription_text(
-                "学校に行きます".to_string(),
-                &settings,
-                false,
-                &evidence,
-                &languages(&["zh", "ja", "en"]),
-            );
-
-            assert_eq!(result, "学校に行きます", "{evidence:?}");
-        }
-    }
-
-    #[test]
-    fn mixed_chinese_english_detected_as_english_is_converted() {
-        // #2239: Whisper tags mixed Mandarin/English runs as English.
-        let settings = AppSettings {
-            chinese_script: ChineseScript::TraditionalTw,
-            filler_word_removal_enabled: false,
-            ..Default::default()
-        };
-        let result = post_process_transcription_text(
-            "欸我跟你说，我今天早上本来想要去咖啡厅工作，结果一打开电脑就发现，Oh my god, I forgot to charge my laptop last night.".to_string(),
-            &settings,
-            false,
-            &OutputLanguageEvidence::ModelDetected("en".to_string()),
-            &languages(&["zh", "en", "ja"]),
-        );
-
-        assert_eq!(
-            result,
-            "欸我跟你說，我今天早上本來想要去咖啡廳工作，結果一打開電腦就發現，Oh my god, I forgot to charge my laptop last night."
-        );
-    }
-
-    #[test]
-    fn preview_converts_mixed_text_but_not_japanese() {
-        let preview = PreviewScript::new(
-            ChineseScript::TraditionalTw,
-            &OutputLanguageEvidence::Unknown,
-        );
-        assert_eq!(
-            preview.convert("我跟你说，", "I forgot my laptop"),
-            ("我跟你說，".to_string(), "I forgot my laptop".to_string())
-        );
-        assert_eq!(
-            preview.convert("学校に", "行きます"),
-            ("学校に".to_string(), "行きます".to_string())
-        );
-    }
-
-    #[test]
-    fn auto_detected_chinese_text_is_converted() {
-        let settings = AppSettings {
-            chinese_script: ChineseScript::Simplified,
-            filler_word_removal_enabled: false,
-            ..Default::default()
-        };
-        let result = post_process_transcription_text(
-            "我們今天下午一起去學校圖書館看書，然後再去吃晚飯。".to_string(),
-            &settings,
-            false,
-            &OutputLanguageEvidence::Unknown,
-            &languages(&["zh", "en", "ja"]),
-        );
-
-        assert_eq!(result, "我们今天下午一起去学校图书馆看书，然后再去吃晚饭。");
     }
 
     #[test]

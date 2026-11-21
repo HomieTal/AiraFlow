@@ -100,13 +100,6 @@
       "noMatch": "“{{query}}” ile eşleşen dil yok. Aira Flow'nin modelleri yaklaşık 100 dili kapsıyor; daha fazlası ayarlarda.",
       "appLanguage": "Uygulama dili",
       "menusIn": "Menüler <b>{{language}}</b> dilinde",
-      "chinese": {
-        "question": "{{languages}} konuşuyorsunuz. Aira Flow hangi karakterleri yazsın?",
-        "label": "Çince karakterler",
-        "zh-Hans": "Basitleştirilmiş",
-        "zh-Hant": "Tayvan",
-        "zh-HK": "Hong Kong"
-      },
       "hint": {
         "pickOne": "En az bir dil seçin",
         "weak_one": "{{languages}}: henüz hiçbir model bunu iyi anlamıyor",
@@ -616,16 +609,6 @@
       "fillerWordRemoval": {
         "title": "Dolgu Sözcüklerini Kaldır",
         "description": "Transkripsiyonlardaki yaygın duraksama sözcüklerini kaldırır. Bunları korumak için kapatın."
-      },
-      "chineseScript": {
-        "title": "Çince yazı",
-        "description": "Mandarin ve Kantonca transkripsiyonları Basitleştirilmiş karakterlerle veya Tayvan ya da Hong Kong'da yazıldığı şekliyle Geleneksel karakterlerle yazar. Diğer diller değiştirilmez.",
-        "options": {
-          "asTranscribed": "Transkripsiyondaki gibi",
-          "simplified": "Basitleştirilmiş",
-          "traditionalTw": "Geleneksel (Tayvan)",
-          "traditionalHk": "Geleneksel (Hong Kong)"
-        }
       }
     },
     "postProcessing": {

@@ -100,13 +100,6 @@
       "noMatch": "Žádný jazyk neodpovídá „{{query}}“. Modely Aira Flow pokrývají zhruba 100 jazyků, další najdete v nastavení.",
       "appLanguage": "Jazyk aplikace",
       "menusIn": "Nabídky v jazyce: <b>{{language}}</b>",
-      "chinese": {
-        "question": "Mluvíte jazykem: {{languages}}. Jaké znaky má Aira Flow psát?",
-        "label": "Čínské znaky",
-        "zh-Hans": "Zjednodušené",
-        "zh-Hant": "Tchaj-wan",
-        "zh-HK": "Hongkong"
-      },
       "hint": {
         "pickOne": "Vyberte alespoň jeden jazyk",
         "weak_one": "{{languages}}: zatím ho žádný model dobře neslyší",
@@ -616,16 +609,6 @@
       "fillerWordRemoval": {
         "title": "Odstranit výplňová slova",
         "description": "Odstraňuje běžná slova vyjadřující váhání z přepisů. Vypnutím je zachováte."
-      },
-      "chineseScript": {
-        "title": "Čínské písmo",
-        "description": "Přepisy v mandarínštině a kantonštině se píší zjednodušenými znaky nebo tradičními znaky, jak se píší na Tchaj-wanu či v Hongkongu. Ostatní jazyky zůstanou beze změny.",
-        "options": {
-          "asTranscribed": "Jak bylo přepsáno",
-          "simplified": "Zjednodušené",
-          "traditionalTw": "Tradiční (Tchaj-wan)",
-          "traditionalHk": "Tradiční (Hongkong)"
-        }
       }
     },
     "postProcessing": {

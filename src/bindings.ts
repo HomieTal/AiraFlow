@@ -558,14 +558,6 @@ async changeFillerWordRemovalEnabledSetting(enabled: boolean) : Promise<Result<n
     else return { status: "error", error: e  as any };
 }
 },
-async changeChineseScriptSetting(script: ChineseScript) : Promise<Result<null, string>> {
-    try {
-    return { status: "ok", data: await TAURI_INVOKE("change_chinese_script_setting", { script }) };
-} catch (e) {
-    if(e instanceof Error) throw e;
-    else return { status: "error", error: e  as any };
-}
-},
 async changeAppLanguageSetting(language: string) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("change_app_language_setting", { language }) };
@@ -1342,11 +1334,7 @@ airpods_mode?: boolean; keyboard_implementation?: KeyboardImplementation; show_t
  * fixed delay. See `paste_tx`. macOS and Windows only.
  */
 reliable_paste?: boolean; typing_tool?: TypingTool; external_script_path?: string | null; filler_word_removal_enabled?: boolean; custom_filler_words?: string[] | null; 
-/**
- * Fresh installs default from the OS locale; existing stores are migrated
- * in `apply_settings_migrations`.
- */
-chinese_script?: ChineseScript; transcribe_accelerator?: TranscribeAcceleratorSetting; 
+transcribe_accelerator?: TranscribeAcceleratorSetting; 
 /**
  * Stable transcribe.cpp device selector. This is derived from the backend's
  * `device_id` when available (or its name for backends such as Metal),
@@ -1391,23 +1379,6 @@ export type AutoUnavailableReason =
 { kind: "no_match" }
 export type AvailableAccelerators = { transcribe: string[]; gpu_devices: GpuDeviceOption[] }
 export type BindingResponse = { success: boolean; binding: ShortcutBinding | null; error: string | null }
-/**
- * Script applied to Mandarin and Cantonese output. Traditional carries its region
- * (Taiwan vs Hong Kong forms, e.g. 裡/裏) rather than guessing it.
- */
-export type ChineseScript = 
-/**
- * Keep whatever script the model produced.
- */
-"as_transcribed" | "simplified" | 
-/**
- * Traditional, Taiwan forms. Also reads legacy `traditional` (migrated on load).
- */
-"traditional_tw" | 
-/**
- * Traditional, in Hong Kong's standard forms.
- */
-"traditional_hk"
 export type ClipboardHandling = "dont_modify" | "copy_to_clipboard"
 export type CustomSounds = { start: boolean; stop: boolean }
 export type GpuDeviceOption = { id: string; name: string; total_vram_mb: number }

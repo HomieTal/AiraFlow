@@ -193,22 +193,6 @@ pub enum ClipboardHandling {
     CopyToClipboard,
 }
 
-/// Script applied to Mandarin and Cantonese output. Traditional carries its region
-/// (Taiwan vs Hong Kong forms, e.g. 裡/裏) rather than guessing it.
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
-#[serde(rename_all = "snake_case")]
-pub enum ChineseScript {
-    /// Keep whatever script the model produced.
-    #[default]
-    AsTranscribed,
-    Simplified,
-    /// Traditional, Taiwan forms. Also reads legacy `traditional` (migrated on load).
-    #[serde(alias = "traditional")]
-    TraditionalTw,
-    /// Traditional, in Hong Kong's standard forms.
-    TraditionalHk,
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum AutoSubmitKey {
@@ -577,10 +561,6 @@ pub struct AppSettings {
     pub filler_word_removal_enabled: bool,
     #[serde(default)]
     pub custom_filler_words: Option<Vec<String>>,
-    /// Fresh installs default from the OS locale; existing stores are migrated
-    /// in `apply_settings_migrations`.
-    #[serde(default)]
-    pub chinese_script: ChineseScript,
     #[serde(default)]
     pub transcribe_accelerator: TranscribeAcceleratorSetting,
     /// Stable transcribe.cpp device selector. This is derived from the backend's
@@ -691,15 +671,6 @@ fn default_language_detection_window_secs() -> u32 {
 
 fn default_filler_word_removal_enabled() -> bool {
     true
-}
-
-fn default_chinese_script() -> ChineseScript {
-    crate::system_languages::suggested_chinese_script(
-        crate::system_languages::system_languages()
-            .iter()
-            .map(String::as_str),
-    )
-    .unwrap_or_default()
 }
 
 fn default_debug_mode() -> bool {
@@ -1171,7 +1142,6 @@ pub fn get_default_settings() -> AppSettings {
         external_script_path: None,
         filler_word_removal_enabled: default_filler_word_removal_enabled(),
         custom_filler_words: None,
-        chinese_script: default_chinese_script(),
         transcribe_accelerator: TranscribeAcceleratorSetting::default(),
         transcribe_gpu_device: default_transcribe_gpu_device(),
         extra_recording_buffer_ms: 0,
@@ -1366,49 +1336,6 @@ fn apply_settings_migrations(
         updated = true;
     }
 
-    // One-time Chinese script migration: the script used to be chosen through
-    // `zh-Hans`/`zh-Hant` language intents. Split those into the recognition
-    // language and the script setting; every other upgrading user keeps the
-    // unconverted output they had. Only fresh installs get the locale default.
-    if settings_value.get("chinese_script").is_none() {
-        settings.chinese_script = match settings.selected_language.as_str() {
-            "zh-Hans" => ChineseScript::Simplified,
-            "zh-Hant" => ChineseScript::TraditionalTw,
-            _ => ChineseScript::AsTranscribed,
-        };
-        if settings.chinese_script != ChineseScript::AsTranscribed {
-            settings.selected_language = "zh".to_string();
-        }
-        updated = true;
-    }
-
-    // One-time Traditional split: `traditional` took its regional forms from
-    // what was spoken (Hong Kong's for Cantonese, Taiwan's for Mandarin).
-    // Keep Hong Kong's for people who speak Cantonese or whose OS's first
-    // Traditional Chinese language is Hong Kong's or Macau's. People who
-    // dictated both now get one region's forms for both.
-    if settings_value
-        .get("chinese_script")
-        .and_then(|v| v.as_str())
-        == Some("traditional")
-    {
-        let hong_kong = settings.spoken_languages.iter().any(|l| l == "yue")
-            || os_languages().iter().find_map(|tag| {
-                match crate::chinese_script::chinese_script_for_locale(tag) {
-                    Some(s @ (ChineseScript::TraditionalTw | ChineseScript::TraditionalHk)) => {
-                        Some(s)
-                    }
-                    _ => None,
-                }
-            }) == Some(ChineseScript::TraditionalHk);
-        settings.chinese_script = if hong_kong {
-            ChineseScript::TraditionalHk
-        } else {
-            ChineseScript::TraditionalTw
-        };
-        updated = true;
-    }
-
     let stored_schema_version = settings_value
         .get("settings_schema_version")
         .and_then(|v| v.as_u64())
@@ -1482,19 +1409,11 @@ fn apply_settings_migrations(
 /// Likely spoken languages from existing settings and the OS; always includes English.
 fn guessed_spoken_languages(
     settings: &AppSettings,
-    settings_value: &serde_json::Value,
+    _settings_value: &serde_json::Value,
 ) -> Vec<String> {
-    // Read the stored value: a missing key may hold the locale default, not a choice.
-    let picked_script = settings_value
-        .get("chinese_script")
-        .and_then(|v| v.as_str())
-        .is_some_and(|script| script != "as_transcribed");
     let intent = settings.selected_language.as_str();
-    // A script says Chinese, unless the language they picked already does.
-    let picked_chinese = crate::chinese_script::chinese_script_for_locale(intent).is_some();
     let tags = [
         (intent != "auto").then_some(intent),
-        (picked_script && !picked_chinese).then_some("zh"),
         Some(settings.app_language.as_str()),
     ]
     .into_iter()
@@ -1724,7 +1643,7 @@ mod tests {
             "overlay_position": "bottom",
             "debug_mode": false,
             "log_level": 2,
-            "custom_words": ["Aira Flow", "cjpais"],
+            "custom_words": ["Aira Flow", "R&D"],
             "model_unload_timeout": "min5",
             "word_correction_threshold": 0.18,
             "history_limit": 5,
@@ -1971,24 +1890,6 @@ mod tests {
         assert_eq!(settings.overlay_position, OverlayPosition::Top);
     }
 
-    #[test]
-    fn chinese_script_migration_only_carries_over_legacy_intents() {
-        for (intent, language, script) in [
-            ("zh-Hans", "zh", ChineseScript::Simplified),
-            ("zh-Hant", "zh", ChineseScript::TraditionalTw),
-            ("auto", "auto", ChineseScript::AsTranscribed),
-        ] {
-            let mut settings = get_default_settings();
-            settings.selected_language = intent.to_string();
-            settings.chinese_script = ChineseScript::TraditionalTw;
-            let raw = serde_json::json!({ "selected_language": intent });
-
-            assert!(apply_settings_migrations(&mut settings, &raw));
-            assert_eq!(settings.selected_language, language);
-            assert_eq!(settings.chinese_script, script);
-        }
-    }
-
     /// Spoken languages backfilled for an onboarded upgrader with these stored
     /// settings (merged over the defaults, as a stored file deserializes).
     fn backfilled(stored: serde_json::Value) -> AppSettings {
@@ -2017,14 +1918,6 @@ mod tests {
                 serde_json::json!({ "selected_language": "zh-Hant" }),
                 vec!["zh", "en"],
             ),
-            (
-                serde_json::json!({ "chinese_script": "traditional" }),
-                vec!["zh", "en"],
-            ),
-            (
-                serde_json::json!({ "chinese_script": "as_transcribed" }),
-                vec!["en"],
-            ),
             // A picked language leads, the app's follows.
             (
                 serde_json::json!({ "selected_language": "fr", "app_language": "de" }),
@@ -2040,14 +1933,10 @@ mod tests {
     }
 
     #[test]
-    fn spoken_languages_backfill_keeps_cantonese_on_hong_kong_forms() {
-        let settings = backfilled(serde_json::json!({
-            "selected_language": "yue",
-            "chinese_script": "traditional"
-        }));
+    fn spoken_languages_backfill_keeps_cantonese() {
+        let settings = backfilled(serde_json::json!({ "selected_language": "yue" }));
 
         assert_eq!(settings.spoken_languages, vec!["yue", "en"]);
-        assert_eq!(settings.chinese_script, ChineseScript::TraditionalHk);
     }
 
     #[test]
@@ -2188,7 +2077,6 @@ mod tests {
             "onboarding_completed": false,
             "whats_new_last_seen_version": default_whats_new_last_seen_version(),
             "overlay_style": "live",
-            "chinese_script": "as_transcribed",
             "transcribe_accelerator": "gpu",
             "transcribe_gpu_device": settings.transcribe_gpu_device
         });

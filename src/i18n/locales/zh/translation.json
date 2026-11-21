@@ -100,13 +100,6 @@
       "noMatch": "没有与“{{query}}”匹配的语言。Aira Flow 的模型涵盖约 100 种语言，更多语言可在设置中找到。",
       "appLanguage": "应用语言",
       "menusIn": "菜单语言：<b>{{language}}</b>",
-      "chinese": {
-        "question": "您说{{languages}}。Aira Flow 应该写哪种汉字？",
-        "label": "汉字",
-        "zh-Hans": "简体",
-        "zh-Hant": "台湾繁体",
-        "zh-HK": "香港繁体"
-      },
       "hint": {
         "pickOne": "请至少选择一种语言",
         "weak_one": "{{languages}}：目前还没有模型能很好地听懂",
@@ -616,16 +609,6 @@
       "fillerWordRemoval": {
         "title": "移除语气词",
         "description": "从转录中移除常见的语气词。关闭此选项即可保留这些词。"
-      },
-      "chineseScript": {
-        "title": "简繁转换",
-        "description": "将普通话和粤语的转录结果输出为简体字，或台湾、香港通行的繁体字。其他语言保持不变。",
-        "options": {
-          "asTranscribed": "保持原样",
-          "simplified": "简体",
-          "traditionalTw": "繁体（台湾）",
-          "traditionalHk": "繁体（香港）"
-        }
       }
     },
     "postProcessing": {

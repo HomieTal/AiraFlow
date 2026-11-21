@@ -100,13 +100,6 @@
       "noMatch": "Cap llengua coincideix amb «{{query}}». Els models del Aira Flow cobreixen unes 100 llengües; en trobareu més a la configuració.",
       "appLanguage": "Llengua de l'aplicació",
       "menusIn": "Menús en <b>{{language}}</b>",
-      "chinese": {
-        "question": "Parleu {{languages}}. Quins caràcters ha d'escriure el Aira Flow?",
-        "label": "Caràcters xinesos",
-        "zh-Hans": "Simplificat",
-        "zh-Hant": "Taiwan",
-        "zh-HK": "Hong Kong"
-      },
       "hint": {
         "pickOne": "Trieu almenys una llengua",
         "weak_one": "{{languages}}: cap model l'entén bé encara",
@@ -616,16 +609,6 @@
       "fillerWordRemoval": {
         "title": "Elimina les falques",
         "description": "Elimina les expressions de vacil·lació habituals de les transcripcions. Desactiveu aquesta opció per conservar-les."
-      },
-      "chineseScript": {
-        "title": "Escriptura xinesa",
-        "description": "Escriu les transcripcions en mandarí i cantonès amb caràcters simplificats, o amb caràcters tradicionals tal com s'escriuen a Taiwan o a Hong Kong. Les altres llengües es deixen tal qual.",
-        "options": {
-          "asTranscribed": "Tal com s'ha transcrit",
-          "simplified": "Simplificat",
-          "traditionalTw": "Tradicional (Taiwan)",
-          "traditionalHk": "Tradicional (Hong Kong)"
-        }
       }
     },
     "postProcessing": {

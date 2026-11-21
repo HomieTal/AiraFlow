@@ -5,7 +5,6 @@ mod audio_feedback;
 pub mod audio_toolkit;
 mod autostart;
 mod catalog;
-mod chinese_script;
 pub mod cli;
 mod clipboard;
 mod commands;
@@ -757,7 +756,6 @@ pub fn run(cli_args: CliArgs) {
             shortcut::change_long_form_chunking_setting,
             shortcut::change_vad_backend_setting,
             shortcut::change_filler_word_removal_enabled_setting,
-            shortcut::change_chinese_script_setting,
             shortcut::change_app_language_setting,
             shortcut::change_update_checks_setting,
             shortcut::change_show_whats_new_on_update_setting,
@@ -1069,8 +1067,8 @@ pub fn run(cli_args: CliArgs) {
 
             // Disable WebView2 browser accelerators (F5, F6, Ctrl+F, F12, ...).
             // A settings window has no use for them, and pressing F6 while
-            // recording a shortcut was reported to turn the whole window white
-            // (cjpais/Aira Flow#1940), likely by triggering WebView2 focus cycling.
+            // recording a shortcut was reported to turn the whole window white,
+            // likely by triggering WebView2 focus cycling.
             // DevTools stays enabled; only the F12 accelerator is lost.
             #[cfg(target_os = "windows")]
             {

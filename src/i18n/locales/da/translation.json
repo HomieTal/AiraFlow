@@ -100,13 +100,6 @@
       "noMatch": "Intet sprog matcher »{{query}}«. Aira Flows modeller dækker omkring 100 sprog; flere findes i indstillingerne.",
       "appLanguage": "Appens sprog",
       "menusIn": "Menuer på <b>{{language}}</b>",
-      "chinese": {
-        "question": "Du taler {{languages}}. Hvilke tegn skal Aira Flow skrive?",
-        "label": "Kinesiske tegn",
-        "zh-Hans": "Forenklet",
-        "zh-Hant": "Taiwan",
-        "zh-HK": "Hongkong"
-      },
       "hint": {
         "pickOne": "Vælg mindst ét sprog",
         "weak_one": "{{languages}}: ingen model forstår det godt endnu",
@@ -616,16 +609,6 @@
       "fillerWordRemoval": {
         "title": "Fjern fyldord",
         "description": "Fjerner almindelige tøveord fra transskriptioner. Slå fra for at beholde dem."
-      },
-      "chineseScript": {
-        "title": "Kinesisk skrift",
-        "description": "Skriver mandarin- og kantonesiske transskriptioner med forenklede tegn eller med traditionelle tegn, som de skrives i Taiwan eller Hongkong. Andre sprog forbliver uændrede.",
-        "options": {
-          "asTranscribed": "Som transskriberet",
-          "simplified": "Forenklet",
-          "traditionalTw": "Traditionelle (Taiwan)",
-          "traditionalHk": "Traditionelle (Hongkong)"
-        }
       }
     },
     "postProcessing": {

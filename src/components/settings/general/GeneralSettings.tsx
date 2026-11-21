@@ -13,17 +13,11 @@ import { VolumeSlider } from "../VolumeSlider";
 import { MuteWhileRecording } from "../MuteWhileRecording";
 import { ModelSettingsCard } from "./ModelSettingsCard";
 import { PreferredLanguages } from "../PreferredLanguages";
-import { ChineseScriptSetting } from "../ChineseScript";
-import { isChinese } from "@/lib/utils/languageSuggestions";
 
 export const GeneralSettings: React.FC = () => {
   const { t } = useTranslation();
-  const { audioFeedbackEnabled, getSetting } = useSettings();
+  const { audioFeedbackEnabled } = useSettings();
   const isLinux = type() === "linux";
-  // Only for Chinese speakers, or anyone who already picked a script.
-  const speaksChinese =
-    (getSetting("spoken_languages") ?? []).some(isChinese) ||
-    (getSetting("chinese_script") ?? "as_transcribed") !== "as_transcribed";
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
       <SettingsGroup title={t("settings.general.title")}>
@@ -34,9 +28,6 @@ export const GeneralSettings: React.FC = () => {
       </SettingsGroup>
       <SettingsGroup title={t("settings.languages.title")}>
         <PreferredLanguages descriptionMode="tooltip" grouped={true} />
-        {speaksChinese && (
-          <ChineseScriptSetting descriptionMode="tooltip" grouped={true} />
-        )}
       </SettingsGroup>
       <ModelSettingsCard />
       <SettingsGroup title={t("settings.sound.title")}>

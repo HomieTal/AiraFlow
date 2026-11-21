@@ -345,7 +345,7 @@ fn requested_gdk_backend(value: Option<&str>) -> Option<&str> {
 /// the user's environment, so `GDK_BACKEND=wayland ./AiraFlow.AppImage` never
 /// reaches Aira Flow. The hook cannot overwrite a variable it does not know about,
 /// so `AIRA_FLOW_GDK_BACKEND=wayland ./AiraFlow.AppImage` is the opt-in to native
-/// Wayland (cjpais/Aira Flow#1729, #2034). Must run before GTK initializes.
+/// Wayland. Must run before GTK initializes.
 #[cfg(target_os = "linux")]
 pub fn apply_aira_flow_gdk_backend() {
     let requested = std::env::var("AIRA_FLOW_GDK_BACKEND").ok();

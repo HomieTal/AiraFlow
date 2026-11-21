@@ -1,11 +1,9 @@
-//! OS preferred languages and the spoken-language / Chinese-script guesses made
-//! from them, for onboarding and the settings migration.
+//! OS preferred languages and the spoken-language guess made from them,
+//! for onboarding and the settings migration.
 
 use log::{info, warn};
 use once_cell::sync::Lazy;
 use serde::Serialize;
-
-use crate::settings::ChineseScript;
 
 /// How many languages a guess offers, before English rides along.
 const MAX_GUESSED: usize = 3;
@@ -87,20 +85,10 @@ pub fn suggested_languages<'a>(tags: impl IntoIterator<Item = &'a str>) -> Vec<S
     languages
 }
 
-/// The Chinese script the first Chinese tag names (`zh-Hant-US` →
-/// Traditional), if any tag is Chinese.
-pub fn suggested_chinese_script<'a>(
-    tags: impl IntoIterator<Item = &'a str>,
-) -> Option<ChineseScript> {
-    tags.into_iter()
-        .find_map(crate::chinese_script::chinese_script_for_locale)
-}
-
 /// What onboarding suggests, from the OS's languages.
 #[derive(Serialize)]
 struct Suggestion {
     languages: Vec<String>,
-    chinese_script: Option<ChineseScript>,
 }
 
 /// Injects the suggestion as `window.__AIRA_FLOW_SYSTEM_LANGUAGES__`, since onboarding
@@ -108,8 +96,7 @@ struct Suggestion {
 pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
     let tags = system_languages().iter().map(String::as_str);
     let suggestion = Suggestion {
-        languages: suggested_languages(tags.clone()),
-        chinese_script: suggested_chinese_script(tags),
+        languages: suggested_languages(tags),
     };
     let json = serde_json::to_string(&suggestion).expect("suggestion serializes");
     tauri::plugin::Builder::new("system-languages")
@@ -136,28 +123,6 @@ mod tests {
             (vec![], vec!["en"]),
         ] {
             assert_eq!(suggested_languages(tags.clone()), languages, "{tags:?}");
-        }
-    }
-
-    #[test]
-    fn suggests_the_first_chinese_tags_script() {
-        for (tags, script) in [
-            (
-                vec!["en-US", "zh-Hant-US"],
-                Some(ChineseScript::TraditionalTw),
-            ),
-            (
-                vec!["zh-Hans-CN", "zh-Hant-TW"],
-                Some(ChineseScript::Simplified),
-            ),
-            (
-                vec!["en-GB", "zh-Hant-HK"],
-                Some(ChineseScript::TraditionalHk),
-            ),
-            (vec!["yue-Hant-HK"], Some(ChineseScript::TraditionalHk)),
-            (vec!["en-US", "ja-JP"], None),
-        ] {
-            assert_eq!(suggested_chinese_script(tags.clone()), script, "{tags:?}");
         }
     }
 }

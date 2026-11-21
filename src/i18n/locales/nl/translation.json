@@ -100,13 +100,6 @@
       "noMatch": "Geen taal gevonden voor „{{query}}”. De modellen van Aira Flow dekken ongeveer 100 talen; meer vind je in de instellingen.",
       "appLanguage": "App-taal",
       "menusIn": "Menu’s in het <b>{{language}}</b>",
-      "chinese": {
-        "question": "Je spreekt {{languages}}. Welke tekens moet Aira Flow schrijven?",
-        "label": "Chinese tekens",
-        "zh-Hans": "Vereenvoudigd",
-        "zh-Hant": "Taiwan",
-        "zh-HK": "Hongkong"
-      },
       "hint": {
         "pickOne": "Kies minstens één taal",
         "weak_one": "{{languages}}: geen enkel model verstaat die taal al goed",
@@ -616,16 +609,6 @@
       "fillerWordRemoval": {
         "title": "Opvulwoorden verwijderen",
         "description": "Verwijdert veelvoorkomende aarzelwoorden uit transcripties. Schakel dit uit om ze te behouden."
-      },
-      "chineseScript": {
-        "title": "Chinees schrift",
-        "description": "Schrijft Mandarijnse en Kantonese transcripties in vereenvoudigde tekens, of in traditionele tekens zoals gebruikt in Taiwan of Hongkong. Andere talen blijven ongewijzigd.",
-        "options": {
-          "asTranscribed": "Zoals getranscribeerd",
-          "simplified": "Vereenvoudigd",
-          "traditionalTw": "Traditioneel (Taiwan)",
-          "traditionalHk": "Traditioneel (Hongkong)"
-        }
       }
     },
     "postProcessing": {

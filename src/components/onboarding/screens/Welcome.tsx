@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "../../ui/Button";
-import { Radio } from "../../ui/Radio";
 import { Mascot } from "../../shared/Mascot";
 import {
   LanguageOptions,
@@ -12,7 +11,6 @@ import AiraFlowTextLogo from "../../icons/AiraFlowTextLogo";
 import { OnboardingShell, ScreenHeader } from "../OnboardingShell";
 import { AppLanguageMenu } from "../AppLanguageMenu";
 import { useOnboardingStore } from "../onboardingStore";
-import { CHINESE_SCRIPTS, isChinese } from "@/lib/utils/languageSuggestions";
 import { CURATED_ASR, isWeakLanguage } from "@/lib/models/catalog";
 import { modelMatchesLanguage } from "@handy-computer/models";
 import { getSupportedLanguage } from "@/i18n";
@@ -27,11 +25,11 @@ interface WelcomeProps {
   onContinue: () => void;
 }
 
-/** Screen 1: greeting, spoken languages, and Chinese script. */
+/** Screen 1: greeting and spoken languages. */
 export const Welcome: React.FC<WelcomeProps> = ({ progress, onContinue }) => {
   const { t, i18n } = useTranslation();
   const { updateSetting } = useSettings();
-  const { languages, script, modelId, preview, set } = useOnboardingStore();
+  const { languages, modelId, preview, set } = useOnboardingStore();
   const picker = useLanguagePicker({
     languages,
     onChange: (next) => {
@@ -56,7 +54,6 @@ export const Welcome: React.FC<WelcomeProps> = ({ progress, onContinue }) => {
   }, []);
 
   const ui = i18n.language;
-  const chinese = languages.filter(isChinese);
   const weak = languages.filter(isWeakLanguage);
 
   const hint = !languages.length
@@ -122,47 +119,6 @@ export const Welcome: React.FC<WelcomeProps> = ({ progress, onContinue }) => {
             />
           </div>
         </div>
-
-        {chinese.length > 0 && (
-          <div className="w-full animate-rise pt-[12px] text-start">
-            <p className="mt-0 mb-[8px] text-small font-semibold text-text">
-              {t("onboarding.welcome.chinese.question", {
-                languages: languageList(chinese, ui),
-              })}
-            </p>
-            <div
-              role="radiogroup"
-              aria-label={t("onboarding.welcome.chinese.label")}
-              className="flex flex-wrap gap-[8px]"
-            >
-              {CHINESE_SCRIPTS.map((s) => {
-                const picked = script === s.id;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    role="radio"
-                    aria-checked={picked}
-                    onClick={() => set({ script: s.id })}
-                    className={`inline-flex h-[34px] cursor-pointer items-center gap-[8px] rounded-control border-[1.5px] bg-background ps-[10px] pe-[14px] text-small font-semibold text-text ${
-                      picked
-                        ? "border-plum-pick"
-                        : "border-line-strong hover:border-ink-3"
-                    }`}
-                  >
-                    <Radio checked={picked} />
-                    <span>
-                      <span lang={s.lang} className="font-cjk-subset">
-                        {s.native}
-                      </span>{" "}
-                      {t(`onboarding.welcome.chinese.${s.id}`)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
       </div>
     </OnboardingShell>
   );

@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { commands, type ChineseScript } from "@/bindings";
+import { commands } from "@/bindings";
 import { useSettings } from "@/hooks/useSettings";
 import {
   STEP_ORDER,
@@ -9,8 +9,6 @@ import {
   type OnboardingStep,
 } from "./onboardingStore";
 import { usePermissions } from "./usePermissions";
-import type { ChineseScriptChoice } from "@/lib/utils/languageSuggestions";
-import { isChinese } from "@/lib/utils/languageSuggestions";
 import { Welcome } from "./screens/Welcome";
 import { Permissions } from "./screens/Permissions";
 import { Model } from "./screens/Model";
@@ -32,13 +30,6 @@ interface OnboardingFlowProps {
   /** Called after the last screen, to show Settings. */
   onComplete: () => void;
 }
-
-// The backend's chinese_script values for the script picked on Welcome.
-const SCRIPT_SETTING: Record<ChineseScriptChoice, ChineseScript> = {
-  "zh-Hans": "simplified",
-  "zh-Hant": "traditional_tw",
-  "zh-HK": "traditional_hk",
-};
 
 /** First-run onboarding. Progress persists, so a relaunch or quit resumes. */
 export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
@@ -178,11 +169,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({
 
   const saveLanguages = () => {
     if (preview) return;
-    const { languages, script } = useOnboardingStore.getState();
+    const { languages } = useOnboardingStore.getState();
     // The model's own Language stays as is; effective_language uses these.
     updateSetting("spoken_languages", languages);
-    if (languages.some(isChinese))
-      updateSetting("chinese_script", SCRIPT_SETTING[script]);
   };
 
   switch (step) {

@@ -871,7 +871,7 @@ mod tests {
 
     #[test]
     fn test_apply_custom_words_handles_unicode_punctuation() {
-        let text = "「Handee。」";
+        let text = "「Aira Flaw。」";
         let custom_words = vec!["Aira Flow".to_string()];
         let result = apply_custom_words(text, &custom_words, 0.5);
         assert_eq!(result, "「Aira Flow。」");

@@ -100,13 +100,6 @@
       "noMatch": "Keine Sprache passt zu „{{query}}“. Die Modelle von Aira Flow decken etwa 100 Sprachen ab; weitere findest du in den Einstellungen.",
       "appLanguage": "App-Sprache",
       "menusIn": "Menüs auf <b>{{language}}</b>",
-      "chinese": {
-        "question": "Du sprichst {{languages}}. Welche Schriftzeichen soll Aira Flow schreiben?",
-        "label": "Chinesische Schriftzeichen",
-        "zh-Hans": "Vereinfacht",
-        "zh-Hant": "Taiwan",
-        "zh-HK": "Hongkong"
-      },
       "hint": {
         "pickOne": "Wähle mindestens eine Sprache",
         "weak_one": "{{languages}}: Noch kein Modell versteht sie gut",
@@ -616,16 +609,6 @@
       "fillerWordRemoval": {
         "title": "Füllwörter entfernen",
         "description": "Entfernt häufige Verzögerungslaute aus Transkriptionen. Deaktivieren Sie diese Option, um sie beizubehalten."
-      },
-      "chineseScript": {
-        "title": "Chinesische Schrift",
-        "description": "Schreibt Transkriptionen auf Mandarin und Kantonesisch in vereinfachten Schriftzeichen oder in traditionellen Schriftzeichen, wie sie in Taiwan oder Hongkong geschrieben werden. Andere Sprachen bleiben unverändert.",
-        "options": {
-          "asTranscribed": "Wie transkribiert",
-          "simplified": "Vereinfacht",
-          "traditionalTw": "Traditionell (Taiwan)",
-          "traditionalHk": "Traditionell (Hongkong)"
-        }
       }
     },
     "postProcessing": {

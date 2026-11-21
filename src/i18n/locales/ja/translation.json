@@ -100,13 +100,6 @@
       "noMatch": "「{{query}}」に一致する言語はありません。Aira Flow のモデルは約100言語に対応しており、ほかの言語は設定から選べます。",
       "appLanguage": "アプリの言語",
       "menusIn": "メニューは<b>{{language}}</b>で表示",
-      "chinese": {
-        "question": "{{languages}}を話しますね。Aira Flow にはどの文字で書かせますか?",
-        "label": "中国語の文字",
-        "zh-Hans": "簡体字",
-        "zh-Hant": "台湾",
-        "zh-HK": "香港"
-      },
       "hint": {
         "pickOne": "言語を1つ以上選んでください",
         "weak_one": "{{languages}}: まだこの言語をうまく聞き取れるモデルはありません",
@@ -616,16 +609,6 @@
       "fillerWordRemoval": {
         "title": "フィラー語を削除",
         "description": "文字起こしから一般的なフィラー語を削除します。残すにはオフにしてください。"
-      },
-      "chineseScript": {
-        "title": "中国語の表記",
-        "description": "標準中国語と広東語の文字起こしを、簡体字、または台湾・香港で使われる繁体字で出力します。ほかの言語は変更されません。",
-        "options": {
-          "asTranscribed": "文字起こしのまま",
-          "simplified": "簡体字",
-          "traditionalTw": "繁体字 (台湾)",
-          "traditionalHk": "繁体字 (香港)"
-        }
       }
     },
     "postProcessing": {

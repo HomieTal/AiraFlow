@@ -384,7 +384,7 @@ export const Demo: React.FC<DemoProps> = ({
 }) => {
   const { t } = useTranslation();
   const { getSetting } = useSettings();
-  const { languages, script, preview } = useOnboardingStore();
+  const { languages, preview } = useOnboardingStore();
   const binding = getSetting("bindings")?.transcribe;
   const shortcut = binding?.current_binding ?? "";
   const [still] = useState(prefersReducedMotion);
@@ -443,7 +443,7 @@ export const Demo: React.FC<DemoProps> = ({
         setPillState("work");
         setPhrase(2);
       } else {
-        const line = demoLine(languages, script, mode);
+        const line = demoLine(languages, mode);
         setPillState("hidden");
         setText((x) => ({
           value: line.text,
@@ -453,7 +453,7 @@ export const Demo: React.FC<DemoProps> = ({
         }));
       }
     },
-    [languages, script],
+    [languages],
   );
 
   const play = useCallback(
