@@ -1,6 +1,6 @@
 [package]
 name = "aira-flow"
-version = "0.10.1"
+version = "0.10.2"
 description = "Aira Flow"
 authors = ["cjpais"]
 edition = "2021"
